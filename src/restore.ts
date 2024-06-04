@@ -2,7 +2,7 @@ import * as core from "@actions/core";
 
 import { cleanTargetDir } from "./cleanup";
 import { CacheConfig } from "./config";
-import { getCacheProvider, reportError } from "./utils";
+import { getCacheProvider, reportError, getInputS3ClientConfig, getInputS3Bucket } from "./utils";
 
 process.on("uncaughtException", (e) => {
   core.error(e.message);
@@ -33,10 +33,14 @@ async function run() {
 
     core.info(`... Restoring cache ...`);
     const key = config.cacheKey;
+
+    const s3Options = getInputS3ClientConfig();
+    const s3BucketName = getInputS3Bucket();
+
     // Pass a copy of cachePaths to avoid mutating the original array as reported by:
     // https://github.com/actions/toolkit/pull/1378
     // TODO: remove this once the underlying bug is fixed.
-    const restoreKey = await cacheProvider.cache.restoreCache(config.cachePaths.slice(), key, [config.restoreKey]);
+    const restoreKey = await cacheProvider.cache.restoreCache(config.cachePaths.slice(), key, [config.restoreKey], undefined, s3Options, s3BucketName);
     if (restoreKey) {
       const match = restoreKey === key;
       core.info(`Restored from cache key "${restoreKey}" full match: ${match}.`);
