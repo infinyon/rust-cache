@@ -55,7 +55,7 @@ inputs:
     description: 'endpoint'
     required: false
   aws-s3-bucket-endpoint:
-    description: 'aws-s3-bucket-endpoin'
+    description: 'aws-s3-bucket-endpoint'
     required: false
   aws-s3-force-path-style:
     description: 'aws-s3-force-path-style'
