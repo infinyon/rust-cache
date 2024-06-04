@@ -95,7 +95,7 @@ export class CacheConfig {
     envPrefixes.push(...core.getInput("env-vars").split(/\s+/).filter(Boolean));
 
     // sort the available env vars so we have a more stable hash
-    const keyEnvs = [];
+    const keyEnvs: string[] = [];
     const envKeys = Object.keys(process.env);
     envKeys.sort((a, b) => a.localeCompare(b));
     for (const key of envKeys) {
@@ -130,7 +130,7 @@ export class CacheConfig {
     self.workspaces = workspaces;
 
     let keyFiles = await globFiles(".cargo/config.toml\nrust-toolchain\nrust-toolchain.toml");
-    const parsedKeyFiles = []; // keyFiles that are parsed, pre-processed and hashed
+    const parsedKeyFiles: string[] = []; // keyFiles that are parsed, pre-processed and hashed
 
     hasher = crypto.createHash("sha1");
 

@@ -36,30 +36,6 @@ inputs:
     description: "Determiners whether the cache should be saved. If `false`, the cache is only restored."
     required: false
     default: "true"
-  aws-s3-bucket:
-    description: 'An AWS S3 bucket to save cache'
-    required: false
-  aws-access-key-id:
-    description: 'An AWS access key id to access the bucket'
-    required: false
-  aws-secret-access-key:
-    description: 'An AWS secret access key to access the bucket'
-    required: false
-  aws-session-token:
-    description: 'aws-session-token'
-    required: false
-  aws-region:
-    description: 'An AWS region where the bucket is located'
-    required: false
-  aws-endpoint:
-    description: 'endpoint'
-    required: false
-  aws-s3-bucket-endpoint:
-    description: 'aws-s3-bucket-endpoint'
-    required: false
-  aws-s3-force-path-style:
-    description: 'aws-s3-force-path-style'
-    required: false
 outputs:
   cache-hit:
     description: "A boolean value that indicates an exact match was found."

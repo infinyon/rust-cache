@@ -3,7 +3,8 @@ import * as exec from "@actions/exec";
 
 import { cleanBin, cleanGit, cleanRegistry, cleanTargetDir } from "./cleanup";
 import { CacheConfig, isCacheUpToDate } from "./config";
-import { getCacheProvider, getInputS3Bucket, getInputS3ClientConfig, reportError } from "./utils";
+import { getCacheProvider, reportError } from "./utils";
+import { PackageDefinition } from "./workspace";
 
 process.on("uncaughtException", (e) => {
   core.error(e.message);
@@ -34,7 +35,7 @@ async function run() {
     // TODO: remove this once https://github.com/actions/toolkit/pull/553 lands
     await macOsWorkaround();
 
-    const allPackages = [];
+    const allPackages: PackageDefinition[] = [];
     for (const workspace of config.workspaces) {
       const packages = await workspace.getPackagesOutsideWorkspaceRoot();
       allPackages.push(...packages);
@@ -68,14 +69,11 @@ async function run() {
       core.debug(`${(e as any).stack}`);
     }
 
-    const s3Options = getInputS3ClientConfig();
-    const s3BucketName = getInputS3Bucket();
-
     core.info(`... Saving cache ...`);
     // Pass a copy of cachePaths to avoid mutating the original array as reported by:
     // https://github.com/actions/toolkit/pull/1378
     // TODO: remove this once the underlying bug is fixed.
-    await cacheProvider.cache.saveCache(config.cachePaths.slice(), config.cacheKey, undefined, s3Options, s3BucketName);
+    await cacheProvider.cache.saveCache(config.cachePaths.slice(), config.cacheKey);
   } catch (e) {
     reportError(e);
   }

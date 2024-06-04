@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "noImplicitAny": false,
     "noEmitOnError": false,
     "diagnostics": true,
     "lib": ["esnext"],

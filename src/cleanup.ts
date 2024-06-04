@@ -64,7 +64,7 @@ async function cleanProfileTarget(profileDir: string, packages: Packages, checkT
 
   const keepDeps = new Set(
     packages.flatMap((p) => {
-      const names = [];
+      const names: string[] = [];
       for (const n of [p.name, ...p.targets]) {
         const name = n.replace(/-/g, "_");
         names.push(name, `lib${name}`);
