@@ -34910,8 +34910,8 @@ async function saveCache(paths, key, _options, enableCrossOsArchive = false) {
         compressionMethod,
         enableCrossOsArchive
     });
-    await external_fs_.promises.mkdir(cacheDir, { recursive: true });
     const archiveFolder = external_path_.join(cacheDir, prefix, key);
+    await external_fs_.promises.mkdir(archiveFolder, { recursive: true });
     const archivePath = external_path_.join(archiveFolder, cacheUtils.getCacheFileName(compressionMethod));
     lib_core.debug(`Archive archiveFolder: ${archiveFolder}`);
     lib_core.debug(`Archive Path: ${archivePath}`);

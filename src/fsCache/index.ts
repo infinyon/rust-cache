@@ -180,13 +180,14 @@ export async function saveCache(
         enableCrossOsArchive
     });
 
-    await fs.promises.mkdir(cacheDir, { recursive: true });
-
     const archiveFolder = path.join(
         cacheDir,
         prefix,
         key
     );
+
+    await fs.promises.mkdir(archiveFolder, { recursive: true });
+
     const archivePath = path.join(
         archiveFolder,
         utils.getCacheFileName(compressionMethod)
