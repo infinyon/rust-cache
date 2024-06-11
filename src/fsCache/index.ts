@@ -220,13 +220,6 @@ export async function saveCache(
         } else {
             core.warning(`Failed to save: ${typedError.message}`);
         }
-    } finally {
-        // Try to delete the archive to save space
-        try {
-            await utils.unlinkFile(archivePath);
-        } catch (error) {
-            core.debug(`Failed to delete archive: ${error}`);
-        }
     }
 
     return cacheId;

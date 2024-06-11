@@ -34938,15 +34938,6 @@ async function saveCache(paths, key, _options, enableCrossOsArchive = false) {
             lib_core.warning(`Failed to save: ${typedError.message}`);
         }
     }
-    finally {
-        // Try to delete the archive to save space
-        try {
-            await cacheUtils.unlinkFile(archivePath);
-        }
-        catch (error) {
-            lib_core.debug(`Failed to delete archive: ${error}`);
-        }
-    }
     return cacheId;
 }
 function getPrefix(paths, { compressionMethod, enableCrossOsArchive }) {
