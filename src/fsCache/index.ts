@@ -291,6 +291,11 @@ export async function getCacheEntry(
 
         try {
             const files = await readdir(restoreDir);
+            console.error(
+                `filesfiles`,
+                files
+            );
+
             if (files.length > 0) {
                 // Sort keys by LastModified time in descending order
                 const sortedKeys = files.sort(

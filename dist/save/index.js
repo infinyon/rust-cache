@@ -34983,6 +34983,7 @@ async function getCacheEntry(keys, paths, { compressionMethod, enableCrossOsArch
         const restoreDir = [cacheDir, prefix, restoreKey].join("/");
         try {
             const files = await (0,promises_namespaceObject.readdir)(restoreDir);
+            console.error(`filesfiles`, files);
             if (files.length > 0) {
                 // Sort keys by LastModified time in descending order
                 const sortedKeys = files.sort((a, b) => {
