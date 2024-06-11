@@ -1,15 +1,16 @@
-// https://github.com/actions/toolkit/blob/%40actions/cache%403.2.2/packages/cache/src/cache.ts
-
 import * as core from "@actions/core";
 import * as path from "path";
 import * as utils from "@actions/cache/lib/internal/cacheUtils";
-import * as cacheHttpClient from "./backend";
 import {
     createTar,
     extractTar,
     listTar
 } from "@actions/cache/lib/internal/tar";
 import { DownloadOptions, UploadOptions } from "@actions/cache/lib/options";
+import { CompressionMethod } from "@actions/cache/lib/internal/constants";
+import * as crypto from "crypto";
+import * as fs from "fs";
+import { readdir } from "fs/promises";
 
 export class ValidationError extends Error {
     constructor(message: string) {
@@ -56,8 +57,13 @@ function checkKey(key: string): void {
  */
 
 export function isFeatureAvailable(): boolean {
-    return !!process.env["ACTIONS_CACHE_URL"];
+    return true;
 }
+
+const cacheDir: string =
+    process.env.INF_RUNNER_CACHE_DIR || "/var/local/inf_runner_cache";
+
+const versionSalt = "1.0";
 
 /**
  * Restores cache from keys
@@ -73,7 +79,7 @@ export async function restoreCache(
     paths: string[],
     primaryKey: string,
     restoreKeys?: string[],
-    options?: DownloadOptions,
+    _options?: DownloadOptions,
     enableCrossOsArchive = false
 ): Promise<string | undefined> {
     checkPaths(paths);
@@ -94,35 +100,17 @@ export async function restoreCache(
     }
 
     const compressionMethod = await utils.getCompressionMethod();
-    let archivePath = "";
+    // let cacheEntry: ArtifactCacheEntry = null;
     try {
         // path are needed to compute version
-        const cacheEntry = await cacheHttpClient.getCacheEntry(keys, paths, {
+        const cacheEntry = await getCacheEntry(keys, paths, {
             compressionMethod,
             enableCrossOsArchive
         });
-        if (!cacheEntry?.archiveLocation) {
-            // Cache not found
-            return undefined;
-        }
 
-        if (options?.lookupOnly) {
-            core.info("Lookup only - skipping download");
-            return cacheEntry.cacheKey;
-        }
+        const archivePath = [cacheEntry?.archiveLocation, cacheEntry?.cacheKey].join('/');
 
-        archivePath = path.join(
-            await utils.createTempDirectory(),
-            utils.getCacheFileName(compressionMethod)
-        );
         core.debug(`Archive Path: ${archivePath}`);
-
-        // Download the cache from the cache entry
-        await cacheHttpClient.downloadCache(
-            cacheEntry.archiveLocation,
-            archivePath,
-            options
-        );
 
         if (core.isDebug()) {
             await listTar(archivePath, compressionMethod);
@@ -138,7 +126,7 @@ export async function restoreCache(
         await extractTar(archivePath, compressionMethod);
         core.info("Cache restored successfully");
 
-        return cacheEntry.cacheKey;
+        return cacheEntry?.cacheKey;
     } catch (error) {
         const typedError = error as Error;
         if (typedError.name === ValidationError.name) {
@@ -146,13 +134,6 @@ export async function restoreCache(
         } else {
             // Supress all non-validation cache related errors because caching should be optional
             core.warning(`Failed to restore: ${(error as Error).message}`);
-        }
-    } finally {
-        // Try to delete the archive to save space
-        try {
-            await utils.unlinkFile(archivePath);
-        } catch (error) {
-            core.debug(`Failed to delete archive: ${error}`);
         }
     }
 
@@ -190,7 +171,17 @@ export async function saveCache(
         );
     }
 
-    const archiveFolder = await utils.createTempDirectory();
+    const prefix = getPrefix(paths, {
+        compressionMethod,
+        enableCrossOsArchive
+    });
+
+    await fs.promises.mkdir(cacheDir, { recursive: true });
+
+    const archiveFolder = path.join(
+        cacheDir,
+        prefix
+    );
     const archivePath = path.join(
         archiveFolder,
         utils.getCacheFileName(compressionMethod)
@@ -205,12 +196,6 @@ export async function saveCache(
         }
         const archiveFileSize = utils.getArchiveFileSizeInBytes(archivePath);
         core.debug(`File Size: ${archiveFileSize}`);
-
-        await cacheHttpClient.saveCache(key, paths, archivePath, {
-            compressionMethod,
-            enableCrossOsArchive,
-            cacheSize: archiveFileSize
-        });
 
         // dummy cacheId, if we get there without raising, it means the cache has been saved
         cacheId = 1;
@@ -233,4 +218,93 @@ export async function saveCache(
     }
 
     return cacheId;
+}
+
+function getPrefix(
+    paths: string[],
+    { compressionMethod, enableCrossOsArchive }
+): string {
+    const repository = process.env.GITHUB_REPOSITORY;
+    const version = getCacheVersion(
+        paths,
+        compressionMethod,
+        enableCrossOsArchive
+    );
+
+    return ["cache", repository, version].join("/");
+}
+
+export function getCacheVersion(
+    paths: string[],
+    compressionMethod?: CompressionMethod,
+    enableCrossOsArchive = false
+): string {
+    // don't pass changes upstream
+    const components = paths.slice();
+
+    // Add compression method to cache version to restore
+    // compressed cache as per compression method
+    if (compressionMethod) {
+        components.push(compressionMethod);
+    }
+
+    // Only check for windows platforms if enableCrossOsArchive is false
+    if (process.platform === "win32" && !enableCrossOsArchive) {
+        components.push("windows-only");
+    }
+
+    // Add salt to cache version to support breaking changes in cache entry
+    components.push(versionSalt);
+
+    return crypto
+        .createHash("sha256")
+        .update(components.join("|"))
+        .digest("hex");
+}
+
+export async function getCacheEntry(
+    keys,
+    paths,
+    { compressionMethod, enableCrossOsArchive }
+): Promise<ArtifactCacheEntry | null> {
+    let cacheEntry: ArtifactCacheEntry | null = null;
+
+    // Find the most recent key matching one of the restoreKeys prefixes
+    for (const restoreKey of keys) {
+        const prefix = getPrefix(paths, {
+            compressionMethod,
+            enableCrossOsArchive
+        });
+        const restoreDir = [prefix, restoreKey].join("/");
+
+        try {
+            const files = await readdir(restoreDir);
+            if (files.length > 0) {
+                // Sort keys by LastModified time in descending order
+                const sortedKeys = files.sort(
+                    (a, b) => {
+                        const aFileStat = fs.statSync([restoreDir, a].join('/'));
+                        const bFileStat = fs.statSync([restoreDir, b].join('/'));
+                        return Number(aFileStat.mtimeMs) - Number(bFileStat.mtimeMs)
+                    }
+                );
+                return {
+                    cacheKey: sortedKeys[0],
+                    archiveLocation: restoreDir
+                };
+            }
+        } catch (error) {
+            console.error(
+                `Error listing objects with prefix ${restoreKey}`,
+                error
+            );
+        }
+    }
+
+    return cacheEntry; // No keys found
+}
+
+export interface ArtifactCacheEntry {
+    cacheKey: string;
+    archiveLocation: string;
 }

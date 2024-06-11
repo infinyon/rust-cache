@@ -1,6 +1,6 @@
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
-import * as custom from "./custom/cache";
+import * as fsCache from "./fsCache";
 import fs from "fs";
 
 export function reportError(e: any) {
@@ -50,7 +50,7 @@ export interface CacheProvider {
 
 export function getCacheProvider(): CacheProvider {
   const cacheProvider = core.getInput("cache-provider");
-  const cache = custom;
+  const cache = fsCache;
 
   if (!cache) {
     throw new Error(`The \`cache-provider\` \`{cacheProvider}\` is not valid.`);
