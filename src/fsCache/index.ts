@@ -140,7 +140,7 @@ export async function restoreCache(
         await extractTar(archivePath, compressionMethod);
         core.info("Cache restored successfully");
 
-        return cacheEntry?.cacheKey;
+        return cacheEntry;
     } catch (error) {
         const typedError = error as Error;
         if (typedError.name === ValidationError.name) {
@@ -287,7 +287,7 @@ export async function getCacheEntry(
     keys,
     paths,
     { compressionMethod, enableCrossOsArchive }
-): Promise<ArtifactCacheEntry | null> {
+): Promise<string | null> {
     let cacheEntry: string | null = null;
 
     // Find the most recent key matching one of the restoreKeys prefixes

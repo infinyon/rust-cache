@@ -34877,7 +34877,7 @@ async function restoreCache(paths, primaryKey, restoreKeys, _options, enableCros
         core.info(`Cache Size: ~${Math.round(archiveFileSize / (1024 * 1024))} MB (${archiveFileSize} B)`);
         await (0,tar.extractTar)(archivePath, compressionMethod);
         core.info("Cache restored successfully");
-        return cacheEntry?.cacheKey;
+        return cacheEntry;
     }
     catch (error) {
         const typedError = error;
