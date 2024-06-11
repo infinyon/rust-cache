@@ -112,7 +112,12 @@ export async function restoreCache(
             throw "cache entry not found";
         }
 
-        const archiveFolder = [cacheEntry?.archiveLocation, cacheEntry?.cacheKey].join('/');
+        const prefix = getPrefix(paths, {
+            compressionMethod,
+            enableCrossOsArchive
+        });
+
+        const archiveFolder = [cacheDir, prefix, cacheEntry].join('/');
 
         const archivePath = path.join(
             archiveFolder,
@@ -220,6 +225,17 @@ export async function saveCache(
         } else {
             core.warning(`Failed to save: ${typedError.message}`);
         }
+    } finally {
+        // Try to delete the archive to save space
+        try {
+            const manifestPath = path.join(
+                archiveFolder,
+                "manifest.txt"
+            );
+            await utils.unlinkFile(manifestPath);
+        } catch (error) {
+            core.debug(`Failed to delete manifest: ${error}`);
+        }
     }
 
     return cacheId;
@@ -272,7 +288,7 @@ export async function getCacheEntry(
     paths,
     { compressionMethod, enableCrossOsArchive }
 ): Promise<ArtifactCacheEntry | null> {
-    let cacheEntry: ArtifactCacheEntry | null = null;
+    let cacheEntry: string | null = null;
 
     // Find the most recent key matching one of the restoreKeys prefixes
     for (const restoreKey of keys) {
@@ -291,17 +307,14 @@ export async function getCacheEntry(
 
             if (files.length > 0) {
                 // Sort keys by LastModified time in descending order
-                const sortedKeys = files.sort(
-                    (a, b) => {
-                        const aFileStat = fs.statSync([restoreDir, a].join('/'));
-                        const bFileStat = fs.statSync([restoreDir, b].join('/'));
-                        return Number(aFileStat.mtimeMs) - Number(bFileStat.mtimeMs)
-                    }
-                );
-                return {
-                    cacheKey: sortedKeys[0],
-                    archiveLocation: restoreDir
-                };
+                // const _sortedKeys = files.sort(
+                //     (a, b) => {
+                //         const aFileStat = fs.statSync([restoreDir, a].join('/'));
+                //         const bFileStat = fs.statSync([restoreDir, b].join('/'));
+                //         return Number(aFileStat.mtimeMs) - Number(bFileStat.mtimeMs)
+                //     }
+                // );
+                return restoreKey;
             }
         } catch (error) {
             console.error(

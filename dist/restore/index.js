@@ -34863,7 +34863,11 @@ async function restoreCache(paths, primaryKey, restoreKeys, _options, enableCros
         if (cacheEntry == null) {
             throw "cache entry not found";
         }
-        const archiveFolder = [cacheEntry?.archiveLocation, cacheEntry?.cacheKey].join('/');
+        const prefix = getPrefix(paths, {
+            compressionMethod,
+            enableCrossOsArchive
+        });
+        const archiveFolder = [cacheDir, prefix, cacheEntry].join('/');
         const archivePath = external_path_.join(archiveFolder, cacheUtils.getCacheFileName(compressionMethod));
         lib_core.debug(`Archive Path: ${archivePath}`);
         if (lib_core.isDebug()) {
@@ -34938,6 +34942,16 @@ async function saveCache(paths, key, _options, enableCrossOsArchive = false) {
             lib_core.warning(`Failed to save: ${typedError.message}`);
         }
     }
+    finally {
+        // Try to delete the archive to save space
+        try {
+            const manifestPath = external_path_.join(archiveFolder, "manifest.txt");
+            await cacheUtils.unlinkFile(manifestPath);
+        }
+        catch (error) {
+            lib_core.debug(`Failed to delete manifest: ${error}`);
+        }
+    }
     return cacheId;
 }
 function getPrefix(paths, { compressionMethod, enableCrossOsArchive }) {
@@ -34977,15 +34991,14 @@ async function getCacheEntry(keys, paths, { compressionMethod, enableCrossOsArch
             console.error(`filesfiles`, files);
             if (files.length > 0) {
                 // Sort keys by LastModified time in descending order
-                const sortedKeys = files.sort((a, b) => {
-                    const aFileStat = external_fs_.statSync([restoreDir, a].join('/'));
-                    const bFileStat = external_fs_.statSync([restoreDir, b].join('/'));
-                    return Number(aFileStat.mtimeMs) - Number(bFileStat.mtimeMs);
-                });
-                return {
-                    cacheKey: sortedKeys[0],
-                    archiveLocation: restoreDir
-                };
+                // const _sortedKeys = files.sort(
+                //     (a, b) => {
+                //         const aFileStat = fs.statSync([restoreDir, a].join('/'));
+                //         const bFileStat = fs.statSync([restoreDir, b].join('/'));
+                //         return Number(aFileStat.mtimeMs) - Number(bFileStat.mtimeMs)
+                //     }
+                // );
+                return restoreKey;
             }
         }
         catch (error) {
