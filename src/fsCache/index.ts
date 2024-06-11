@@ -108,6 +108,10 @@ export async function restoreCache(
             enableCrossOsArchive
         });
 
+        if (cacheEntry == null) {
+            throw "cache entry not found";
+        }
+
         const archivePath = [cacheEntry?.archiveLocation, cacheEntry?.cacheKey].join('/');
 
         core.debug(`Archive Path: ${archivePath}`);
@@ -180,13 +184,15 @@ export async function saveCache(
 
     const archiveFolder = path.join(
         cacheDir,
-        prefix
+        prefix,
+        key
     );
     const archivePath = path.join(
         archiveFolder,
         utils.getCacheFileName(compressionMethod)
     );
 
+    core.debug(`Archive archiveFolder: ${archiveFolder}`);
     core.debug(`Archive Path: ${archivePath}`);
 
     try {
