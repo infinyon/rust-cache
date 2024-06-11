@@ -34860,6 +34860,9 @@ async function restoreCache(paths, primaryKey, restoreKeys, _options, enableCros
             compressionMethod,
             enableCrossOsArchive
         });
+        if (cacheEntry == null) {
+            throw "cache entry not found";
+        }
         const archivePath = [cacheEntry?.archiveLocation, cacheEntry?.cacheKey].join('/');
         core.debug(`Archive Path: ${archivePath}`);
         if (core.isDebug()) {
@@ -34908,8 +34911,9 @@ async function saveCache(paths, key, _options, enableCrossOsArchive = false) {
         enableCrossOsArchive
     });
     await external_fs_.promises.mkdir(cacheDir, { recursive: true });
-    const archiveFolder = external_path_.join(cacheDir, prefix);
+    const archiveFolder = external_path_.join(cacheDir, prefix, key);
     const archivePath = external_path_.join(archiveFolder, cacheUtils.getCacheFileName(compressionMethod));
+    core.debug(`Archive archiveFolder: ${archiveFolder}`);
     core.debug(`Archive Path: ${archivePath}`);
     try {
         await (0,tar.createTar)(archiveFolder, cachePaths, compressionMethod);
