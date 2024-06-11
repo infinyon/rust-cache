@@ -34863,7 +34863,8 @@ async function restoreCache(paths, primaryKey, restoreKeys, _options, enableCros
         if (cacheEntry == null) {
             throw "cache entry not found";
         }
-        const archivePath = [cacheEntry?.archiveLocation, cacheEntry?.cacheKey].join('/');
+        const archiveFolder = [cacheEntry?.archiveLocation, cacheEntry?.cacheKey].join('/');
+        const archivePath = external_path_.join(archiveFolder, cacheUtils.getCacheFileName(compressionMethod));
         core.debug(`Archive Path: ${archivePath}`);
         if (core.isDebug()) {
             await (0,tar.listTar)(archivePath, compressionMethod);

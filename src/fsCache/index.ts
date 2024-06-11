@@ -112,7 +112,12 @@ export async function restoreCache(
             throw "cache entry not found";
         }
 
-        const archivePath = [cacheEntry?.archiveLocation, cacheEntry?.cacheKey].join('/');
+        const archiveFolder = [cacheEntry?.archiveLocation, cacheEntry?.cacheKey].join('/');
+
+        const archivePath = path.join(
+            archiveFolder,
+            utils.getCacheFileName(compressionMethod)
+        );
 
         core.debug(`Archive Path: ${archivePath}`);
 
