@@ -275,7 +275,7 @@ export async function getCacheEntry(
             compressionMethod,
             enableCrossOsArchive
         });
-        const restoreDir = [prefix, restoreKey].join("/");
+        const restoreDir = [cacheDir, prefix, restoreKey].join("/");
 
         try {
             const files = await readdir(restoreDir);
