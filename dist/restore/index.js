@@ -34975,7 +34975,7 @@ async function getCacheEntry(keys, paths, { compressionMethod, enableCrossOsArch
             compressionMethod,
             enableCrossOsArchive
         });
-        const restoreDir = [prefix, restoreKey].join("/");
+        const restoreDir = [cacheDir, prefix, restoreKey].join("/");
         try {
             const files = await (0,promises_namespaceObject.readdir)(restoreDir);
             if (files.length > 0) {
