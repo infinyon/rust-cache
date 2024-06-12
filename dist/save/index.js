@@ -34828,7 +34828,9 @@ function checkKey(key) {
 function isFeatureAvailable() {
     return true;
 }
-const cacheDir = process.env.INF_RUNNER_CACHE_DIR || "/var/local/inf_runner_cache";
+const cacheDir = process.env.RUST_CACHE_DIR || "/runner/rust_cache";
+// const cacheDir: string =
+//     process.env.INF_RUNNER_CACHE_DIR || "/var/local/inf_runner_cache";
 const versionSalt = "1.0";
 /**
  * Restores cache from keys
