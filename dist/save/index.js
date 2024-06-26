@@ -34922,6 +34922,12 @@ async function saveCache(paths, key, _options, enableCrossOsArchive = false) {
     const archivePath = external_path_.join(archiveFolder, cacheUtils.getCacheFileName(compressionMethod));
     core.debug(`Archive archiveFolder: ${archiveFolder}`);
     core.debug(`Archive Path: ${archivePath}`);
+    // Delete existing tar
+    try {
+        await cacheUtils.unlinkFile(archivePath);
+        core.debug(`Deleted existing tar`);
+    }
+    catch (error) { }
     try {
         await (0,tar.createTar)(archiveFolder, cachePaths, compressionMethod);
         if (core.isDebug()) {

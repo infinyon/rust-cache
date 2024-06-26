@@ -210,6 +210,13 @@ export async function saveCache(
     core.debug(`Archive archiveFolder: ${archiveFolder}`);
     core.debug(`Archive Path: ${archivePath}`);
 
+    // Delete existing tar
+    try {
+        await utils.unlinkFile(archivePath);
+        core.debug(`Deleted existing tar`);
+    
+    } catch (error) {}
+
     try {
         await createTar(archiveFolder, cachePaths, compressionMethod);
         if (core.isDebug()) {
