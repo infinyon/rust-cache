@@ -102,15 +102,17 @@ export async function restoreCache(
     }
 
     const compressionMethod = await utils.getCompressionMethod();
-    // let cacheEntry: ArtifactCacheEntry = null;
     try {
         // path are needed to compute version
-        const cacheEntry = await getCacheEntry(keys, paths, {
+        const restoreKey = await getRestoreKey(keys, paths, {
             compressionMethod,
             enableCrossOsArchive
         });
 
-        if (cacheEntry == null) {
+
+        core.debug(`Cache entry: ${restoreKey}`);
+
+        if (restoreKey == null) {
             throw "cache entry not found";
         }
 
@@ -119,7 +121,7 @@ export async function restoreCache(
             enableCrossOsArchive
         });
 
-        const archiveFolder = [cacheDir, prefix, cacheEntry].join('/');
+        const archiveFolder = [cacheDir, prefix, restoreKey].join('/');
 
         const archivePath = path.join(
             archiveFolder,
@@ -142,7 +144,7 @@ export async function restoreCache(
         await extractTar(archivePath, compressionMethod);
         core.info("Cache restored successfully");
 
-        return cacheEntry;
+        return restoreKey;
     } catch (error) {
         const typedError = error as Error;
         if (typedError.name === ValidationError.name) {
@@ -285,12 +287,12 @@ export function getCacheVersion(
         .digest("hex");
 }
 
-export async function getCacheEntry(
+export async function getRestoreKey(
     keys,
     paths,
     { compressionMethod, enableCrossOsArchive }
 ): Promise<string | null> {
-    let cacheEntry: string | null = null;
+    let restoreKey: string | null = null;
 
     // Find the most recent key matching one of the restoreKeys prefixes
     for (const restoreKey of keys) {
@@ -316,6 +318,9 @@ export async function getCacheEntry(
                 //         return Number(aFileStat.mtimeMs) - Number(bFileStat.mtimeMs)
                 //     }
                 // );
+                console.info(
+                    `Cache found with prefix ${restoreKey}`
+                );
                 return restoreKey;
             }
         } catch (error) {
@@ -325,10 +330,5 @@ export async function getCacheEntry(
         }
     }
 
-    return cacheEntry; // No keys found
-}
-
-export interface ArtifactCacheEntry {
-    cacheKey: string;
-    archiveLocation: string;
+    return restoreKey; // No keys found
 }

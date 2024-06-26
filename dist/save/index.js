@@ -33787,8 +33787,8 @@ __nccwpck_require__.r(fsCache_namespaceObject);
 __nccwpck_require__.d(fsCache_namespaceObject, {
   "ReserveCacheError": () => (ReserveCacheError),
   "ValidationError": () => (ValidationError),
-  "getCacheEntry": () => (getCacheEntry),
   "getCacheVersion": () => (getCacheVersion),
+  "getRestoreKey": () => (getRestoreKey),
   "isFeatureAvailable": () => (isFeatureAvailable),
   "restoreCache": () => (restoreCache),
   "saveCache": () => (saveCache)
@@ -34855,21 +34855,21 @@ async function restoreCache(paths, primaryKey, restoreKeys, _options, enableCros
         checkKey(key);
     }
     const compressionMethod = await cacheUtils.getCompressionMethod();
-    // let cacheEntry: ArtifactCacheEntry = null;
     try {
         // path are needed to compute version
-        const cacheEntry = await getCacheEntry(keys, paths, {
+        const restoreKey = await getRestoreKey(keys, paths, {
             compressionMethod,
             enableCrossOsArchive
         });
-        if (cacheEntry == null) {
+        core.debug(`Cache entry: ${restoreKey}`);
+        if (restoreKey == null) {
             throw "cache entry not found";
         }
         const prefix = getPrefix(paths, {
             compressionMethod,
             enableCrossOsArchive
         });
-        const archiveFolder = [cacheDir, prefix, cacheEntry].join('/');
+        const archiveFolder = [cacheDir, prefix, restoreKey].join('/');
         const archivePath = external_path_.join(archiveFolder, cacheUtils.getCacheFileName(compressionMethod));
         core.debug(`Archive Path: ${archivePath}`);
         if (core.isDebug()) {
@@ -34879,7 +34879,7 @@ async function restoreCache(paths, primaryKey, restoreKeys, _options, enableCros
         core.info(`Cache Size: ~${Math.round(archiveFileSize / (1024 * 1024))} MB (${archiveFileSize} B)`);
         await (0,tar.extractTar)(archivePath, compressionMethod);
         core.info("Cache restored successfully");
-        return cacheEntry;
+        return restoreKey;
     }
     catch (error) {
         const typedError = error;
@@ -34979,8 +34979,8 @@ function getCacheVersion(paths, compressionMethod, enableCrossOsArchive = false)
         .update(components.join("|"))
         .digest("hex");
 }
-async function getCacheEntry(keys, paths, { compressionMethod, enableCrossOsArchive }) {
-    let cacheEntry = null;
+async function getRestoreKey(keys, paths, { compressionMethod, enableCrossOsArchive }) {
+    let restoreKey = null;
     // Find the most recent key matching one of the restoreKeys prefixes
     for (const restoreKey of keys) {
         const prefix = getPrefix(paths, {
@@ -35000,6 +35000,7 @@ async function getCacheEntry(keys, paths, { compressionMethod, enableCrossOsArch
                 //         return Number(aFileStat.mtimeMs) - Number(bFileStat.mtimeMs)
                 //     }
                 // );
+                console.info(`Cache found with prefix ${restoreKey}`);
                 return restoreKey;
             }
         }
@@ -35007,7 +35008,7 @@ async function getCacheEntry(keys, paths, { compressionMethod, enableCrossOsArch
             console.info(`Cache not found with prefix ${restoreKey}`);
         }
     }
-    return cacheEntry; // No keys found
+    return restoreKey; // No keys found
 }
 
 ;// CONCATENATED MODULE: ./src/utils.ts
