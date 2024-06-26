@@ -302,8 +302,8 @@ export async function getCacheEntry(
 
         try {
             const files = await readdir(restoreDir);
-            console.error(
-                `filesfiles`,
+            console.info(
+                "reading files ",
                 files
             );
 
@@ -319,9 +319,8 @@ export async function getCacheEntry(
                 return restoreKey;
             }
         } catch (error) {
-            console.error(
-                `Error listing objects with prefix ${restoreKey}`,
-                error
+            console.info(
+                `Cache not found with prefix ${restoreKey}`
             );
         }
     }
