@@ -34990,7 +34990,7 @@ async function getCacheEntry(keys, paths, { compressionMethod, enableCrossOsArch
         const restoreDir = [cacheDir, prefix, restoreKey].join("/");
         try {
             const files = await (0,promises_namespaceObject.readdir)(restoreDir);
-            console.error(`filesfiles`, files);
+            console.info("reading files ", files);
             if (files.length > 0) {
                 // Sort keys by LastModified time in descending order
                 // const _sortedKeys = files.sort(
@@ -35004,7 +35004,7 @@ async function getCacheEntry(keys, paths, { compressionMethod, enableCrossOsArch
             }
         }
         catch (error) {
-            console.error(`Error listing objects with prefix ${restoreKey}`, error);
+            console.info(`Cache not found with prefix ${restoreKey}`);
         }
     }
     return cacheEntry; // No keys found
