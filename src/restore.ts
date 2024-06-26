@@ -33,7 +33,6 @@ async function run() {
 
     core.info(`... Restoring cache ...`);
     const key = config.cacheKey;
-
     // Pass a copy of cachePaths to avoid mutating the original array as reported by:
     // https://github.com/actions/toolkit/pull/1378
     // TODO: remove this once the underlying bug is fixed.
