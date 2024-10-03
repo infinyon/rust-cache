@@ -159,7 +159,7 @@ export async function restoreCache(
     return undefined;
 }
 
-async function deleteExpiredCaches() {
+export async function deleteExpiredCaches() {
     const cmd = "find";
     const args = [cacheDir, "-atime", "+5", "-delete"];
     
@@ -182,8 +182,6 @@ export async function saveCache(
     _options?: UploadOptions,
     enableCrossOsArchive = false
 ): Promise<number> {
-    await deleteExpiredCaches();
-
     checkPaths(paths);
     checkKey(key);
 

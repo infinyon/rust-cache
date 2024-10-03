@@ -33787,6 +33787,7 @@ __nccwpck_require__.r(fsCache_namespaceObject);
 __nccwpck_require__.d(fsCache_namespaceObject, {
   "ReserveCacheError": () => (ReserveCacheError),
   "ValidationError": () => (ValidationError),
+  "deleteExpiredCaches": () => (deleteExpiredCaches),
   "getCacheVersion": () => (getCacheVersion),
   "getRestoreKey": () => (getRestoreKey),
   "isFeatureAvailable": () => (isFeatureAvailable),
@@ -34909,7 +34910,6 @@ async function deleteExpiredCaches() {
  * @returns number returns cacheId if the cache was saved successfully and throws an error if save fails
  */
 async function saveCache(paths, key, _options, enableCrossOsArchive = false) {
-    await deleteExpiredCaches();
     checkPaths(paths);
     checkKey(key);
     const compressionMethod = await cacheUtils.getCompressionMethod();

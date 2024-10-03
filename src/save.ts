@@ -23,6 +23,8 @@ async function run() {
   }
 
   try {
+    await cacheProvider.cache.deleteExpiredCaches();
+
     if (isCacheUpToDate()) {
       core.info(`Cache up-to-date.`);
       return;
