@@ -34792,6 +34792,7 @@ var tar = __nccwpck_require__(6490);
 
 
 
+
 class ValidationError extends Error {
     constructor(message) {
         super(message);
@@ -34893,6 +34894,11 @@ async function restoreCache(paths, primaryKey, restoreKeys, _options, enableCros
     }
     return undefined;
 }
+async function deleteExpiredCaches() {
+    const cmd = "find";
+    const args = [cacheDir, "-atime", "+5", "-delete"];
+    await exec.exec(cmd, args);
+}
 /**
  * Saves a list of files with the specified key
  *
@@ -34903,6 +34909,7 @@ async function restoreCache(paths, primaryKey, restoreKeys, _options, enableCros
  * @returns number returns cacheId if the cache was saved successfully and throws an error if save fails
  */
 async function saveCache(paths, key, _options, enableCrossOsArchive = false) {
+    await deleteExpiredCaches();
     checkPaths(paths);
     checkKey(key);
     const compressionMethod = await cacheUtils.getCompressionMethod();

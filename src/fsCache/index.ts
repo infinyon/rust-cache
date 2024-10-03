@@ -1,6 +1,7 @@
 import * as core from "@actions/core";
 import * as path from "path";
 import * as utils from "@actions/cache/lib/internal/cacheUtils";
+import * as exec from "@actions/exec";
 import {
     createTar,
     extractTar,
@@ -158,6 +159,14 @@ export async function restoreCache(
     return undefined;
 }
 
+async function deleteExpiredCaches() {
+    const cmd = "find";
+    const args = [cacheDir, "-atime", "+5", "-delete"];
+    
+    await exec.exec(cmd, args);
+}
+
+
 /**
  * Saves a list of files with the specified key
  *
@@ -173,6 +182,8 @@ export async function saveCache(
     _options?: UploadOptions,
     enableCrossOsArchive = false
 ): Promise<number> {
+    await deleteExpiredCaches();
+
     checkPaths(paths);
     checkKey(key);
 
